@@ -38,7 +38,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install test script dependencies
-        run: pip install requests pyjwt nbformat pytz
+        run: pip install requests "pyjwt[crypto]" nbformat pytz
 
       - name: Fetch notebooks
         env:
