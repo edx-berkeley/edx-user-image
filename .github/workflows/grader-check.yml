@@ -24,20 +24,20 @@ jobs:
           df -h
 
       - name: Build PR image
+        id: build-pr-image
         uses: jupyterhub/repo2docker-action@master
         with:
           FORCE_REPO2DOCKER_VERSION: jupyter-repo2docker==2024.07.0
           IMAGE_NAME: edx-user-image
           NO_PUSH: true
-          LATEST_TAG_OFF: false
           REPO_DIR: /srv/repo
 
       - name: Resolve built image tag
         id: built-image
         run: |
-          image=$(docker image ls edx-user-image --format '{{.Repository}}:{{.Tag}}' | grep -v ':<none>$' | head -n 1)
+          image="${{ steps.build-pr-image.outputs.IMAGE_SHA_NAME }}"
           if [ -z "$image" ]; then
-            echo "No local edx-user-image tag found after build"
+            echo "repo2docker-action did not expose IMAGE_SHA_NAME"
             docker image ls
             exit 1
           fi
