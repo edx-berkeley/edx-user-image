@@ -52,3 +52,4 @@ dependencies:
   - otter-submit==0.1.15
   # pulled in by ottr, if not pinned to 1.16.2, 1.16.3 causes DH-323
   - jupytext==1.17.2
+
