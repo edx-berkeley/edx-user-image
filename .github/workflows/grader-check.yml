@@ -32,6 +32,18 @@ jobs:
           LATEST_TAG_OFF: false
           REPO_DIR: /srv/repo
 
+      - name: Resolve built image tag
+        id: built-image
+        run: |
+          image=$(docker image ls edx-user-image --format '{{.Repository}}:{{.Tag}}' | grep -v ':<none>$' | head -n 1)
+          if [ -z "$image" ]; then
+            echo "No local edx-user-image tag found after build"
+            docker image ls
+            exit 1
+          fi
+          echo "Using image: $image"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -50,7 +62,7 @@ jobs:
 
       - name: Run grader.check tests
         run: |
-          python tests/run_grader_check_tests.py --image edx-user-image:latest
+          python tests/run_grader_check_tests.py --image "${{ steps.built-image.outputs.image }}"
 
       - name: Notify Slack
         if: always()
