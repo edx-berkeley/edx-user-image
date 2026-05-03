@@ -22,11 +22,46 @@ TEST_FILES_DIR = Path("tests/test_files")
 DEFAULT_IMAGE = "gcr.io/data8x-scratch/edx-user-image:latest"
 
 
+def split_image_name(image):
+    last_slash = image.rfind("/")
+    last_colon = image.rfind(":")
+    if last_colon > last_slash:
+        return image[:last_colon], image[last_colon + 1 :]
+    return image, None
+
+
+def list_local_images():
+    result = subprocess.run(
+        ["docker", "image", "ls", "--format", "{{.Repository}}:{{.Tag}}"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr[-2000:] or result.stdout[-2000:])
+    return [line.strip() for line in result.stdout.splitlines() if line.strip() and not line.endswith(":<none>")]
+
+
+def resolve_image(image):
+    local_images = list_local_images()
+    if image in local_images:
+        return image
+
+    repository, _ = split_image_name(image)
+    candidates = [local_image for local_image in local_images if split_image_name(local_image)[0] == repository]
+    if candidates:
+        resolved = candidates[0]
+        print(f"Using local image {resolved} because requested image {image} was not found")
+        return resolved
+
+    return image
+
+
 def run_notebook_in_docker(image, nb_path, work_dir, raise_on_error=True):
     """
     Execute a notebook in Docker. Returns the parsed output notebook JSON.
     work_dir must already contain the notebook and all companion files.
     """
+    output_name = f"executed-{nb_path.stem}"
     cmd = [
         "docker", "run", "--rm",
         "-v", f"{work_dir.resolve()}:/work",
@@ -37,13 +72,13 @@ def run_notebook_in_docker(image, nb_path, work_dir, raise_on_error=True):
         "--execute",
         "--ExecutePreprocessor.timeout=300",
         f"--ExecutePreprocessor.raise_on_ioerror={'True' if raise_on_error else 'False'}",
-        "--output", nb_path.name,
+        "--output", output_name,
         nb_path.name,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
-    if raise_on_error and result.returncode != 0:
+    output_nb = work_dir / f"{output_name}.ipynb"
+    if result.returncode != 0 and (raise_on_error or not output_nb.exists()):
         raise RuntimeError(result.stderr[-2000:] or result.stdout[-2000:])
-    output_nb = work_dir / nb_path.name
     if not output_nb.exists():
         raise RuntimeError(f"Output notebook not found after execution: {output_nb}")
     return json.loads(output_nb.read_text())
@@ -132,6 +167,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--image", default=DEFAULT_IMAGE)
     args = parser.parse_args()
+    image = resolve_image(args.image)
 
     pairs = []
     if TEST_FILES_DIR.exists():
@@ -148,7 +184,7 @@ def main():
 
     all_errors = []
     for course, assignment in pairs:
-        _, errors = run_pair(args.image, course, assignment)
+        _, errors = run_pair(image, course, assignment)
         all_errors.extend(errors)
 
     if all_errors:
