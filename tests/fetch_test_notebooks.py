@@ -217,8 +217,8 @@ def fetch_for_course(token, course, smoke=False):
                 name = f"{assignment}.ipynb"
             renamed_solution.append((name, content))
 
-        save_files(student_files, OUTPUT_DIR / course / assignment / "student")
-        save_files(renamed_solution, OUTPUT_DIR / course / assignment / "solution")
+        save_files(student_files, OUTPUT_DIR / course / section / assignment / "student")
+        save_files(renamed_solution, OUTPUT_DIR / course / section / assignment / "solution")
         count += 1
 
     return count
@@ -261,8 +261,8 @@ def fetch_from_pr(changed_raw_paths):
             print(f"  [miss] {solution_dir}", file=sys.stderr)
             continue
 
-        out_student = OUTPUT_DIR / course / assignment / "student"
-        out_solution = OUTPUT_DIR / course / assignment / "solution"
+        out_student = OUTPUT_DIR / course / section / assignment / "student"
+        out_solution = OUTPUT_DIR / course / section / assignment / "solution"
 
         if out_student.exists():
             shutil.rmtree(out_student)
@@ -279,7 +279,7 @@ def fetch_from_pr(changed_raw_paths):
                 dest_name = f"{assignment}.ipynb"
             shutil.copy2(src, out_solution / dest_name)
 
-        print(f"  copied {course}/{assignment} from local workspace")
+        print(f"  copied {course}/{section}/{assignment} from local workspace")
         count += 1
 
     return count
