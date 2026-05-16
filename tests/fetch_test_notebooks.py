@@ -91,6 +91,18 @@ def gh_get(token, url):
     return resp.json()
 
 
+def fetch_blob_raw(token, git_url):
+    """Fetch a blob's raw bytes via the Git Blobs API (works up to 100 MB)."""
+    resp = requests.get(
+        git_url,
+        headers={"Authorization": f"token {token}", "Accept": "application/vnd.github.raw"},
+    )
+    if resp.status_code == 404:
+        return None
+    resp.raise_for_status()
+    return resp.content
+
+
 def fetch_dir_files(token, repo, dir_path, ref="main"):
     """Return list of (filename, decoded_bytes) for all files in a repo directory."""
     items = gh_get(token, f"https://api.github.com/repos/{repo}/contents/{dir_path}?ref={ref}")
@@ -99,6 +111,14 @@ def fetch_dir_files(token, repo, dir_path, ref="main"):
     results = []
     for item in items:
         if item["type"] != "file":
+            continue
+        # Contents API only returns inline base64 content for files ≤ 1 MB.
+        # Above that the `content` field is empty, so fall back to the Blobs API.
+        if item["size"] > 1_000_000:
+            raw = fetch_blob_raw(token, item["git_url"])
+            if raw is None:
+                continue
+            results.append((item["name"], raw))
             continue
         content_data = gh_get(token, item["url"])
         if content_data is None:
