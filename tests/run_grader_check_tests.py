@@ -9,6 +9,7 @@ For each notebook pair in tests/test_files/:
 Usage:
   python tests/run_grader_check_tests.py
   python tests/run_grader_check_tests.py --image edx-user-image:pr
+  python tests/run_grader_check_tests.py --image gcr.io/data8x-scratch/edx-user-image:latest
 """
 import argparse
 import json
