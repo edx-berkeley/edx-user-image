@@ -31,7 +31,7 @@ If you just want to see if the image builds, but not automatically launch the se
 |---|---|---|
 | `yaml-lint.yaml` | `pull_request` | Lints all YAML files via the shared workflow in `berkeley-dsep-infra/update-deployment` |
 | `build-test-image.yaml` | `pull_request` | Builds and tests the image via the shared workflow in `berkeley-dsep-infra/update-deployment` |
-| `grader-check.yml` | `pull_request_target` | Builds the PR image locally, fetches notebooks from the autograder repos, and runs `grader.check` tests |
+| `grader-check.yml` | `pull_request_target` | Comprehensive validation: builds the PR image, fetches ALL notebooks from all courses (88ex, 88bx, 88cx, 8x) and all assignments, and validates that student notebooks fail grader checks (solutions are stripped) while solution notebooks pass all grader checks |
 | `build-push-create-pr.yaml` | Push of a version tag (`X.Y.Z`) or manual `workflow_dispatch` | Builds and pushes the image to Google Artifact Registry, tags it with the version number, and opens a PR in [edx-hub](https://github.com/edx-berkeley/edx-hub) to update the deployment image tag |
 
 The `build-test-image.yaml` and `yaml-lint.yaml` workflows ignore changes to `README.md`, `CONTRIBUTING.md`, `LICENSE`, `.github/**`, and `images/**`. The `grader-check.yml` workflow ignores the same paths.
