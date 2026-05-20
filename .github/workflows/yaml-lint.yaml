@@ -5,3 +5,16 @@ on:
 jobs:
   call-shared-yaml-lint:
     uses: berkeley-dsep-infra/update-deployment/.github/workflows/shared-yaml-lint.yaml@main
+
+  notify-slack:
+    if: always()
+    needs: call-shared-yaml-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v3
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {"text": "${{ needs.call-shared-yaml-lint.result == 'success' && '✅' || '❌' }} edx-user-image yaml-lint ${{ needs.call-shared-yaml-lint.result }} · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"}

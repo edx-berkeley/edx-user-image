@@ -12,3 +12,16 @@ on:
 jobs:
   call-shared-build-test-image:
     uses: berkeley-dsep-infra/update-deployment/.github/workflows/shared-build-test-image.yaml@main
+
+  notify-slack:
+    if: always()
+    needs: call-shared-build-test-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v3
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {"text": "${{ needs.call-shared-build-test-image.result == 'success' && '✅' || '❌' }} edx-user-image build-test-image ${{ needs.call-shared-build-test-image.result }} — ${{ github.head_ref }} · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"}
