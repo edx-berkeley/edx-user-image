@@ -31,7 +31,7 @@ jobs:
       # account instead of the shared IP pool. Account is the org-owned
       # `edxberkeleyci` service identity (see CLAUDE.md / org settings).
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -81,9 +81,9 @@ jobs:
 
       - name: Notify Slack
         if: always()
-        uses: slackapi/slack-github-action@v1
+        uses: slackapi/slack-github-action@v3
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
             {"text": "${{ job.status == 'success' && '✅' || '❌' }} edx-user-image grader-check ${{ job.status }} — ${{ github.head_ref }} · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
