@@ -1,6 +1,12 @@
 name: Call Shared Yaml Lint Workflow
 on:
-  - pull_request  # yamllint disable-line rule:truthy
+  pull_request:
+    paths-ignore:
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "docs/**"
+      - "images/**"
 
 jobs:
   call-shared-yaml-lint:
