@@ -55,6 +55,10 @@ The following workflows post to Slack on every run (success or failure):
 - `grader-check.yml` — on every PR
 - `build-push-create-pr.yaml` — on every release tag build
 
+### Branch protection
+
+`main` requires a PR to land changes (no direct push for non-admins; admins can bypass with a `Bypassed rule violations` warning); force-push and deletion are blocked.
+
 ### Repository variables and secrets
 
 The following must be configured on the repository (or the `edx-berkeley` organization) for CI to function:
