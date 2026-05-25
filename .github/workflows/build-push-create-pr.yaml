@@ -31,7 +31,7 @@ jobs:
         with:
           registry: us-central1-docker.pkg.dev
           username: _json_key
-          password: ${{ secrets.GAR_SECRET_KEY_EDX }}
+          password: ${{ secrets.GCP_SA_KEY }}
 
       - name: Build the image and push to artifact registry
         id: build-and-push
