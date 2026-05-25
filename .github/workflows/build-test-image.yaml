@@ -14,7 +14,10 @@ jobs:
     uses: berkeley-dsep-infra/update-deployment/.github/workflows/shared-build-test-image.yaml@main
 
   notify-slack:
-    if: always()
+    # Skip on fork PRs — org-level SLACK_WEBHOOK_URL is not exposed to fork-PR
+    # workflows by GitHub's security default, so this step would fail with
+    # "Missing input" if we ran it.
+    if: always() && github.event.pull_request.head.repo.full_name == github.repository
     needs: call-shared-build-test-image
     runs-on: ubuntu-latest
     steps:
