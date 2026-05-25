@@ -1,4 +1,4 @@
-name: Call Shared Build and Test Container Image Workflow 
+name: Build and Test Container Image
 
 on:
   pull_request:
@@ -10,15 +10,39 @@ on:
       - 'images/**'
 
 jobs:
-  call-shared-build-test-image:
-    uses: berkeley-dsep-infra/update-deployment/.github/workflows/shared-build-test-image.yaml@main
+  # Inlined from berkeley-dsep-infra/update-deployment shared-build-test-image
+  # to use Node 24 actions. Builds with repo2docker but does NOT push.
+  test-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      DOCKER_CONFIG: $HOME/.docker
+    steps:
+      - name: Checkout files in repo
+        uses: actions/checkout@v6
+
+      - name: Cleanup disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          df -h
+
+      - name: Build with repo2docker (no push)
+        uses: jupyterhub/repo2docker-action@master
+        with:
+          FORCE_REPO2DOCKER_VERSION: jupyter-repo2docker==2024.07.0
+          REPO_DIR: /srv/repo
+          NO_PUSH: true
+          DOCKER_REGISTRY: us-central1-docker.pkg.dev
+          IMAGE_NAME: ${{ vars.IMAGE }}
+
+      - name: Show how much disk space is left
+        run: df -h
 
   notify-slack:
     # Skip on fork PRs — org-level SLACK_WEBHOOK_URL is not exposed to fork-PR
-    # workflows by GitHub's security default, so this step would fail with
-    # "Missing input" if we ran it.
+    # workflows by GitHub's security default.
     if: always() && github.event.pull_request.head.repo.full_name == github.repository
-    needs: call-shared-build-test-image
+    needs: test-build
     runs-on: ubuntu-latest
     steps:
       - name: Notify Slack
@@ -27,4 +51,4 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            {"text": "${{ needs.call-shared-build-test-image.result == 'success' && '✅' || '❌' }} edx-user-image build-test-image ${{ needs.call-shared-build-test-image.result }} — ${{ github.head_ref }} · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"}
+            {"text": "${{ needs.test-build.result == 'success' && '✅' || '❌' }} edx-user-image build-test-image ${{ needs.test-build.result }} — ${{ github.head_ref }} · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"}

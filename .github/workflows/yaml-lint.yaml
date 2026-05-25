@@ -1,4 +1,4 @@
-name: Call Shared Yaml Lint Workflow
+name: YAML Lint
 on:
   pull_request:
     paths-ignore:
@@ -9,15 +9,23 @@ on:
       - "images/**"
 
 jobs:
-  call-shared-yaml-lint:
-    uses: berkeley-dsep-infra/update-deployment/.github/workflows/shared-yaml-lint.yaml@main
+  # Inlined from berkeley-dsep-infra/update-deployment shared-yaml-lint to use
+  # Node 24 actions (was on actions/checkout@v4 / Node 20, deprecated 2026-06-02).
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install yamllint
+        run: pip install yamllint==1.35.1
+      - name: Lint YAML files
+        run: yamllint --no-warnings .
 
   notify-slack:
     # Skip on fork PRs — org-level SLACK_WEBHOOK_URL is not exposed to fork-PR
     # workflows by GitHub's security default, so this step would fail with
     # "Missing input" if we ran it.
     if: always() && github.event.pull_request.head.repo.full_name == github.repository
-    needs: call-shared-yaml-lint
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - name: Notify Slack
@@ -26,4 +34,4 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            {"text": "${{ needs.call-shared-yaml-lint.result == 'success' && '✅' || '❌' }} edx-user-image yaml-lint ${{ needs.call-shared-yaml-lint.result }} · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"}
+            {"text": "${{ needs.lint.result == 'success' && '✅' || '❌' }} edx-user-image yaml-lint ${{ needs.lint.result }} · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"}
