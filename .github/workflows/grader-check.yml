@@ -28,8 +28,13 @@ jobs:
       # GitHub-hosted runners share NAT IPs across all of GitHub Actions —
       # so anonymous pulls almost always hit Docker Hub's 100-pulls/6-hours
       # per-IP rate limit. Authenticating attributes the pull to our service
-      # account instead of the shared IP pool. Account is the org-owned
-      # `edxberkeleyci` service identity (see CLAUDE.md / org settings).
+      # account instead of the shared IP pool. Account: Berkeley SPA
+      # `edxcdss` tied to edx-ds@berkeley.edu (org var DOCKERHUB_USERNAME +
+      # org secret DOCKERHUB_TOKEN, SELECTED scope: this repo, edx-hub,
+      # otter-service). When rotating, always pass --visibility selected
+      # --repos ... to gh secret/variable set — defaulting to PRIVATE
+      # breaks this PUBLIC repo's access. SPA password SOPS-encrypted at
+      # edx-hub/deployments/edx/secrets/service-accounts.yaml.
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
