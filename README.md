@@ -1,7 +1,5 @@
 # edx-user-image
 
-See this repository's [CONTRIBUTING.md](https://github.com/berkeley-dsep-infra/edx-user-image/blob/main/CONTRIBUTING.md) for instructions. That information will eventually be migrated to docs.datahub.berkeley.edu.
-
 # Building the image locally
 
 You should use [repo2-docker](https://repo2docker.readthedocs.io/en/latest/) to build and use/test the image on your own device before you push and create a PR.  It's better (and typically faster) to do this first before using CI/CD.  There's no need to waste Github Action minutes to test build images when you can do this on your own device!
@@ -49,7 +47,7 @@ CI will build the image, push it to Google Artifact Registry, and automatically 
 
 ### Slack notifications
 
-CI results are posted to the **#edx-hub-ci** channel in the **UCB DS External** Slack workspace. To request access, contact a team member or reach out to sean.smorris@berkeley.edu.
+CI results are posted to the **#edx-hub-ci** channel in the **UCB DS External** Slack workspace. To request access, contact a team member or reach out to edx-ds@berkeley.edu.
 
 The following workflows post to Slack on every run (success or failure):
 - `grader-check.yml` — on every PR
